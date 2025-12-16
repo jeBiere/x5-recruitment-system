@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "x5-ml-service"
+version = "0.1.0"
+description = "ML сервис для оценки резюме (заглушка)"
+authors = ["X5 Team"]
+python = "^3.11"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.108.0"
+uvicorn = {extras = ["standard"], version = "^0.25.0"}
+pydantic = "^2.5.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
