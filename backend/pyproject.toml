@@ -3,7 +3,7 @@ name = "x5-recruitment-backend"
 version = "0.1.0"
 description = "Бэкенд системы рекрутинга X5 Group"
 authors = ["X5 Team"]
-python = "^3.11"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -21,6 +21,8 @@ httpx = "^0.25.2"
 redis = "^5.0.1"
 celery = "^5.3.4"
 python-telegram-bot = "^20.7"
+psycopg2-binary = "^2.9.11"
+python-dotenv = "^1.2.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

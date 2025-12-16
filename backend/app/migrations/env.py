@@ -1,13 +1,15 @@
 """Alembic environment configuration."""
 
-import asyncio
+import os
 from logging.config import fileConfig
 
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, pool
 
 from alembic import context
+
+# Load .env file
+load_dotenv()
 
 # Import Base and all models
 from app.core.database import Base
@@ -61,35 +63,31 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection: Connection) -> None:
-    """Run migrations with the given connection.
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode."""
+    # Get DATABASE_URL from .env
+    database_url = os.getenv("DATABASE_URL")
 
-    Args:
-        connection: Database connection.
-    """
-    context.configure(connection=connection, target_metadata=target_metadata)
+    if database_url is None:
+        raise ValueError("DATABASE_URL not found in environment variables")
 
-    with context.begin_transaction():
-        context.run_migrations()
+    # Convert async URL to sync URL for Alembic
+    sync_database_url = database_url.replace(
+        "postgresql+asyncpg://",
+        "postgresql://"
+    )
 
-
-async def run_async_migrations() -> None:
-    """Run migrations in async mode."""
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    # Create sync engine
+    connectable = create_engine(
+        sync_database_url,
         poolclass=pool.NullPool,
     )
 
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+    with connectable.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata)
 
-    await connectable.dispose()
-
-
-def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
-    asyncio.run(run_async_migrations())
+        with context.begin_transaction():
+            context.run_migrations()
 
 
 if context.is_offline_mode():
