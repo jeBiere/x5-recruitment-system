@@ -8,7 +8,6 @@ class UserRole(str, Enum):
 
     CANDIDATE = "candidate"
     RECRUITER = "recruiter"
-    HIRING_MANAGER = "hiring_manager"
 
 
 class ApplicationStatus(str, Enum):

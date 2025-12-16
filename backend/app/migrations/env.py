@@ -31,8 +31,15 @@ if config.config_file_name is not None:
 
 # 6. Импорт метаданных моделей
 from app.core.database import Base
+
+# Импорт всех моделей для автогенерации миграций
 from app.shared.models import User  # noqa: F401
-# TODO: Импорт других моделей
+from app.modules.candidates.models import Candidate, Resume, QuizAttempt  # noqa: F401
+from app.modules.vacancies.models import Track, Team, Vacancy  # noqa: F401
+from app.modules.assessment.models import Quiz, QuizQuestion, VacancyAssessment  # noqa: F401
+from app.modules.recruitment.models import Application, VacancyApplication, Interview  # noqa: F401
+from app.modules.notifications.models import Notification  # noqa: F401
+
 target_metadata = Base.metadata
 
 # 7. Режим offline
