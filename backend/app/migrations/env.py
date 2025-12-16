@@ -1,56 +1,42 @@
-"""Alembic environment configuration."""
-
 import os
+import sys
 from logging.config import fileConfig
 
-from dotenv import load_dotenv
 from sqlalchemy import create_engine, pool
-
 from alembic import context
+from dotenv import load_dotenv
 
-# Load .env file
-load_dotenv()
+# 1. Явно указываем путь к .env, относительно текущей директории
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+env_path = os.path.join(BASE_DIR, ".env")
+print(f"Loading .env from: {env_path}")  # для отладки
+load_dotenv(env_path)
 
-# Import Base and all models
-from app.core.database import Base
-from app.shared.models import User  # noqa: F401
-# TODO: Import other models as they are created
-# from app.modules.candidates.models import Candidate, Resume, QuizAttempt
-# from app.modules.vacancies.models import Track, Team, Vacancy
-# from app.modules.assessment.models import Quiz, QuizQuestion, VacancyAssessment
-# from app.modules.recruitment.models import Application, VacancyApplication, Interview
-# from app.modules.notifications.models import Notification
+# 2. Добавляем backend в sys.path, чтобы импорт моделей работал
+sys.path.append(BASE_DIR)
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# 3. Alembic config
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+# 4. Получаем синхронный URL для Alembic и очищаем его от невидимых символов
+alembic_url = os.getenv("DATABASE_URL_SYNC")
+if not alembic_url:
+    raise RuntimeError("DATABASE_URL_SYNC is not set in .env file")
+alembic_url = alembic_url.strip()  # убираем \r, пробелы и BOM
+config.set_main_option("sqlalchemy.url", alembic_url)
+
+# 5. Настройка логирования
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
+# 6. Импорт метаданных моделей
+from app.core.database import Base
+from app.shared.models import User  # noqa: F401
+# TODO: Импорт других моделей
 target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
-
-
+# 7. Режим offline
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
-
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-    """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -58,37 +44,17 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
-
     with context.begin_transaction():
         context.run_migrations()
 
-
+# 8. Режим online
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
-    # Get DATABASE_URL from .env
-    database_url = os.getenv("DATABASE_URL")
-
-    if database_url is None:
-        raise ValueError("DATABASE_URL not found in environment variables")
-
-    # Convert async URL to sync URL for Alembic
-    sync_database_url = database_url.replace(
-        "postgresql+asyncpg://",
-        "postgresql://"
-    )
-
-    # Create sync engine
-    connectable = create_engine(
-        sync_database_url,
-        poolclass=pool.NullPool,
-    )
-
+    url = config.get_main_option("sqlalchemy.url")
+    connectable = create_engine(url, poolclass=pool.NullPool)
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
-
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()
