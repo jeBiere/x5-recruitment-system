@@ -1,7 +1,8 @@
 """Shared database models."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum, String, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -9,6 +10,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.shared.enums import UserRole
+
+if TYPE_CHECKING:
+    from app.modules.notifications.models import Notification
 
 
 class User(Base):
@@ -62,32 +66,25 @@ class User(Base):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
         comment="Когда аккаунт был создан"
     )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
         comment="Когда аккаунт последний раз обновлялся"
     )
 
     # Relationships
-    candidate: Mapped["Candidate"] = relationship(
-        "Candidate",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        uselist=False,
-    )
-
-    notifications: Mapped[list["Notification"]] = relationship(
-        "Notification",
-        back_populates="user",
-        cascade="all, delete-orphan",
-    )
+    # notifications: Mapped[list["Notification"]] = relationship(
+    #     "Notification",
+    #     back_populates="user",
+    #     cascade="all, delete-orphan",
+    # )
 
     def __repr__(self) -> str:
         """String representation of User.

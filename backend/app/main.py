@@ -64,9 +64,17 @@ async def health() -> dict[str, str]:
     return {"status": "healthy"}
 
 
-# TODO: Register module routers here
-# app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
-# app.include_router(candidates_router, prefix="/api/candidates", tags=["candidates"])
-# app.include_router(vacancies_router, prefix="/api/vacancies", tags=["vacancies"])
-# app.include_router(recruitment_router, prefix="/api/recruitment", tags=["recruitment"])
-# app.include_router(assessment_router, prefix="/api/assessment", tags=["assessment"])
+# Register module routers
+from app.modules.auth.router import router as auth_router
+from app.modules.candidates.router import router as candidates_router
+from app.modules.hiring_managers.router import router as hiring_managers_router
+from app.modules.vacancies.pools_router import router as pools_router
+from app.modules.vacancies.tracks_router import router as tracks_router
+from app.modules.vacancies.vacancies_router import router as vacancies_router
+
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(candidates_router, prefix="/api/candidates", tags=["candidates"])
+app.include_router(hiring_managers_router, prefix="/api/hiring-managers", tags=["hiring-managers"])
+app.include_router(tracks_router, prefix="/api/tracks", tags=["tracks"])
+app.include_router(vacancies_router, prefix="/api/vacancies", tags=["vacancies"])
+app.include_router(pools_router, prefix="/api/candidate-pools", tags=["candidate-pools"])
